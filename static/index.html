@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <title>Auto Subs</title>
+    <meta name="description" content="Auto Subs" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.22/dist/vue.js"></script>
+    <style>
+      #app {
+        display: grid;
+        grid-template: "video list" min-content "controls list" 1fr / auto 20%;
+        grid-gap: 1rem;
+      }
+      #video {
+        grid-area: video;
+      }
+      #list {
+        grid-area: list;
+      }
+      #controls {
+        grid-area: controls;
+      }
+    </style>
+  </head>
+  <body class="bg-black text-white h-full">
+    <div id="app" class="p-4 h-full">
+      <div id="video">
+        <video
+          :src="src"
+          ref="video"
+          controls
+          :autoplay="autoplay"
+          class="w-full"
+          @ended="playNext"
+        ></video>
+      </div>
+      <div id="list" class="overflow-auto max-h-full">
+        <div
+          v-for="(vid, i) in videos"
+          :key="i"
+          class="cursor-pointer border border-white flex relative items-center"
+          @click="play(i)"
+        >
+          <div
+            v-if="!vid.downloaded"
+            class="absolute bg-green block h-full"
+            :style="{ width: vid.progress + '%' }"
+          ></div>
+          <div class="flex-grow z-10 m-2">{{ vid.name }}</div>
+          <div @click.stop="remove(i)" class="z-10">❌</div>
+        </div>
+      </div>
+      <div id="controls" class="flex justify-center items-start">
+        <button
+          class="rounded bg-red-darker text-white px-4 py-2 mx-2"
+          @click="update"
+        >
+          Update
+        </button>
+        <button
+          class="rounded bg-red-darker text-white px-4 py-2 mx-2"
+          @click="refresh"
+        >
+          Refresh
+        </button>
+        <button
+          class="rounded bg-red-darker text-white px-4 py-2 mx-2"
+          @click="speed -= 0.1"
+        >
+          -
+        </button>
+        <span class="rounded border border-white px-4 py-2 mx-2"
+          >{{ speed }}x</span
+        >
+        <button
+          class="rounded bg-red-darker text-white px-4 py-2 mx-2"
+          @click="speed += 0.1"
+        >
+          +
+        </button>
+        <button
+          class="rounded bg-red-darker text-white px-4 py-2 mx-2"
+          @click="remove('all')"
+        >
+          Clear
+        </button>
+      </div>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>

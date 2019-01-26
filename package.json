@@ -1,0 +1,38 @@
+{
+  "name": "auto-subs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/main.js",
+  "nodemonConfig": {
+    "ignore": [
+      "static/**/*",
+      "state.json"
+    ]
+  },
+  "dependencies": {
+    "@types/cheerio": "^0.22.10",
+    "@types/express": "^4.16.0",
+    "@types/filenamify": "^2.0.1",
+    "@types/morgan": "^1.7.35",
+    "@types/node-fetch": "^2.1.4",
+    "cheerio": "^1.0.0-rc.2",
+    "express": "^4.16.4",
+    "filenamify": "^2.1.0",
+    "morgan": "^1.9.1",
+    "node-fetch": "^2.3.0",
+    "ytdl-core": "^0.29.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.18.9",
+    "ts-loader": "^5.3.3",
+    "typescript": "^3.2.2"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsc -w",
+    "mon": "nodemon -i static -i state.json",
+    "start": "tsc & node dist/main.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
