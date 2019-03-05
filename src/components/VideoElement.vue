@@ -1,8 +1,10 @@
 <template>
-  <div class="video" :class="{ watched }">
+  <div class="video" :class="{ watched }" @click="click">
     <img :src="thumbnail" class="thumbnail">
     <span class="title">{{ title }}</span>
     <span class="duration">{{ duration }}</span>
+    <div class="remove" v-if="showControls" @click="remove" :style="stateStyle">❌</div>
+    <div class="live" v-if="live"></div>
   </div>
 </template>
 
@@ -24,9 +26,51 @@ export default Vue.extend({
       type: Boolean,
       default: false,
     },
+    live: {
+      type: Boolean,
+      default: false,
+    },
     id: {
       type: String,
       required: true,
+    },
+    showControls: {
+      type: Boolean,
+      default: false,
+    },
+    state: {
+      type: String,
+      default: "none",
+    },
+  },
+  computed: {
+    stateStyle(): object {
+      switch (this.state) {
+        case "queued":
+        case "none":
+          return {}
+        case "downloading":
+          return {
+            "background-color": "green",
+          }
+        case "finished":
+          return {
+            "background-color": "blue",
+          }
+        default:
+          return {}
+      }
+    },
+  },
+  methods: {
+    click(e: Event) {
+      this.$emit("click", this)
+    },
+    remove(e: Event) {
+      this.$emit("remove", this.id)
+    },
+    download(e: Event) {
+      this.$emit("download", this.id)
     },
   },
 })
@@ -41,6 +85,8 @@ export default Vue.extend({
     "thumbnail title"
     "thumbnail duration";
   grid-gap: 0.5em;
+  cursor: pointer;
+  position: relative;
 }
 
 .watched {
@@ -60,5 +106,27 @@ export default Vue.extend({
   grid-area: duration;
   color: darkgray;
   font-size: 0.8rem;
+}
+
+.live {
+  width: 5px;
+  height: 5px;
+  border-radius: 100em;
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 5px;
+}
+
+.remove {
+  position: absolute;
+  font-size: 80%;
+  display: flex;
+  flex-direction: row;
+  padding: 5px;
+  background-color: darkgrey;
+  border: 1px solid #eee;
+  margin: 5px;
+  border-radius: 3px;
 }
 </style>
