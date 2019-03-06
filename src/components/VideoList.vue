@@ -1,6 +1,6 @@
 <template>
   <div class="videolist">
-    <div class="controls">
+    <div class="controls" v-if="showControls">
       <button @click="clearVideos">Clear</button>
       <button @click="download">💾</button>
     </div>
@@ -8,8 +8,9 @@
       v-for="video in videos"
       :key="video.id"
       v-bind="video"
-      :show-controls="true"
+      :show-controls="showControls"
       @remove="remove"
+      @click="$emit('clickVideo', video)"
     />
   </div>
 </template>
@@ -22,6 +23,12 @@ import { mapState, mapActions } from "vuex"
 export default Vue.extend({
   name: "VideoList",
   components: { VideoElement },
+  props: {
+    showControls: {
+      type: Boolean,
+      default: true,
+    },
+  },
   computed: {
     ...mapState(["videos"]),
   },

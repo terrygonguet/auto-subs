@@ -17,10 +17,10 @@ module.exports = function(app) {
     } catch (err) {}
 
     try {
-      if (fs.existsSync(`./dist/videos/${id}.flv`)) res.json({ error: false })
+      if (fs.existsSync(`./dist/videos/${id}.webm`)) res.json({ error: false })
       else {
         ytdl("http://www.youtube.com/watch?v=" + id)
-          .pipe(fs.createWriteStream(`./dist/videos/${id}.flv`))
+          .pipe(fs.createWriteStream(`./dist/videos/${id}.webm`))
           .on("error", err => {
             console.error(err)
             res.json({ error: true })
@@ -36,7 +36,7 @@ module.exports = function(app) {
   app.get("/api/remove", (req, res) => {
     let id = req.query.id
     try {
-      fs.unlinkSync(`./dist/videos/${id}.flv`)
+      fs.unlinkSync(`./dist/videos/${id}.webm`)
     } catch (err) {
       console.error(err)
       res.json({ error: true })

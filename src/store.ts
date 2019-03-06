@@ -18,6 +18,7 @@ export default new Vuex.Store({
     videos: [] as VideoData[],
     playbackSpeed: 1,
     history: [] as string[],
+    volume: 1,
   },
   mutations: {
     setCookie(state, cookie: string) {
@@ -43,15 +44,19 @@ export default new Vuex.Store({
         state.history.push(id)
     },
     restoreFromLocal(state) {
-      let { cookie = "", videos = [], playbackSpeed = 1 } = JSON.parse(
-        localStorage.getItem("autoSubs") || "{}"
-      )
-      state.cookie = cookie
-      state.videos = videos
-      state.playbackSpeed = playbackSpeed
+      let data = JSON.parse(localStorage.getItem("autoSubs") || "{}")
+      for (const key in data) {
+        Vue.set(state, key, data[key])
+      }
     },
     saveToLocal(state) {
       localStorage.setItem("autoSubs", JSON.stringify(state))
+    },
+    setPlaybackSpeed(state, speed: number) {
+      state.playbackSpeed = parseFloat(speed.toPrecision(2))
+    },
+    setVolume(state, val: number) {
+      state.volume = val < 0 ? 0 : val > 1 ? 1 : val
     },
   },
   actions: {

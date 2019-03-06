@@ -6,6 +6,7 @@
         <option value="subs">Subscriptions</option>
         <option value="wl">Watch Later</option>
       </select>
+      <button @click="gotoPlayer">🎦Player</button>
     </div>
     <div class="candidates">
       <VideoElement
@@ -92,6 +93,9 @@ export default Vue.extend({
         type: "addVideo",
         video: videoData,
       })
+    },
+    gotoPlayer() {
+      this.$router.push("/player")
     },
   },
   mounted() {
