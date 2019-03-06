@@ -7,6 +7,7 @@
       @ended="next"
       @volumechange="changeVolume($event.target)"
       controls
+      :autoplay="autoplay"
     ></video>
     <div class="controls">
       <router-link to="/">Back</router-link>
@@ -35,13 +36,14 @@ export default Vue.extend({
   components: { VideoList },
   data() {
     return {
-      autoplay: true,
       index: 0,
     }
   },
   computed: {
     src(): string {
-      return `/videos/${this.videos[this.index].id}.webm`
+      if (this.videos[this.index])
+        return `/videos/${this.videos[this.index].id}.webm`
+      else return ""
     },
     videos(): VideoData[] {
       return this.$store.state.videos
@@ -51,6 +53,9 @@ export default Vue.extend({
     },
     volume(): number {
       return this.$store.state.volume
+    },
+    autoplay(): number {
+      return this.$store.state.autoplay
     },
   },
   methods: {
@@ -64,7 +69,7 @@ export default Vue.extend({
       this.$store.commit("setVolume", player.volume)
     },
     next() {
-      if (this.autoplay) this.index++
+      if (this.autoplay && this.videos[this.index + 1]) this.index++
     },
   },
   watch: {

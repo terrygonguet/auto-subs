@@ -19,6 +19,7 @@ export default new Vuex.Store({
     playbackSpeed: 1,
     history: [] as string[],
     volume: 1,
+    autoplay: true,
   },
   mutations: {
     setCookie(state, cookie: string) {
@@ -57,6 +58,9 @@ export default new Vuex.Store({
     },
     setVolume(state, val: number) {
       state.volume = val < 0 ? 0 : val > 1 ? 1 : val
+    },
+    setAutoplay(state, autoplay: boolean) {
+      state.autoplay = autoplay
     },
   },
   actions: {
