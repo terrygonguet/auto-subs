@@ -8,6 +8,7 @@
     "start": "node server/index.js"
   },
   "dependencies": {
+    "cron": "^1.6.0",
     "node-fetch": "^2.3.0",
     "vue": "^2.6.6",
     "vue-router": "^3.0.1",

@@ -1,5 +1,8 @@
 <template>
   <div class="container">
+    <div class="loading" v-if="loading">
+      <LoadingSpinner/>
+    </div>
     <div class="controls">
       <button @click="refresh">Refresh</button>
       <select v-model="source">
@@ -24,6 +27,7 @@
 import Vue from "vue"
 import { mapState } from "vuex"
 import VideoElement from "./VideoElement.vue"
+import LoadingSpinner from "./LoadingSpinner.vue"
 
 type VideoElement = {
   title: string
@@ -34,11 +38,12 @@ type VideoElement = {
 
 export default Vue.extend({
   name: "VideoCandidates",
-  components: { VideoElement },
+  components: { VideoElement, LoadingSpinner },
   data() {
     return {
       videos: [] as object,
       source: "subs",
+      loading: false,
     }
   },
   computed: {
@@ -46,6 +51,7 @@ export default Vue.extend({
   },
   methods: {
     async getSubs() {
+      this.loading = true
       let res = await fetch(
         `/api/proxy?url=${encodeURIComponent(
           "https://www.youtube.com/feed/subscriptions"
@@ -75,6 +81,7 @@ export default Vue.extend({
           }
         }
       )
+      this.loading = false
     },
     refresh() {
       if (this.source === "subs") this.getSubs()
@@ -123,5 +130,19 @@ export default Vue.extend({
 
 .video {
   border: 1px solid #eee;
+}
+
+.loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background-color: rgba(50, 50, 50, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99;
+  font-size: 200%;
 }
 </style>

@@ -2,12 +2,19 @@ const fetch = require("node-fetch")
 const ytdl = require("ytdl-core")
 const fs = require("fs")
 
+let currentStream = null
+
 module.exports = function(app) {
   app.get("/api/proxy", async (req, res) => {
-    let url = req.query.url
-    let Cookie = req.query.cookie
-    let result = await fetch(url, { headers: { Cookie } })
-    res.send(await result.text())
+    try {
+      let url = req.query.url
+      let Cookie = req.query.cookie
+      let result = await fetch(url, { headers: { Cookie } })
+      res.send(await result.text())
+    } catch (err) {
+      console.error(err)
+      res.status(500).end()
+    }
   })
 
   app.get("/api/download", (req, res) => {
@@ -18,18 +25,26 @@ module.exports = function(app) {
 
     try {
       if (fs.existsSync(`./dist/videos/${id}.webm`)) res.json({ error: false })
-      else {
-        ytdl("http://www.youtube.com/watch?v=" + id)
+      else if (currentStream) {
+        res.json({ error: true, err: "Already downloading" })
+      } else {
+        currentStream = ytdl("http://www.youtube.com/watch?v=" + id)
           .pipe(fs.createWriteStream(`./dist/videos/${id}.webm`))
           .on("error", err => {
-            console.error(err)
-            res.json({ error: true })
+            !res.headersSent && res.json({ error: true, err })
+            currentStream = null
           })
-          .on("close", () => res.json({ error: false }))
+          .on("close", () => {
+            !res.headersSent && res.json({ error: false })
+            currentStream = null
+          })
+        currentStream.id = id
       }
     } catch (err) {
-      console.error(err)
-      res.json({ error: true })
+      !res.headersSent && res.json({ error: true, err })
+      currentStream && currentStream.destroy(err)
+      fs.unlink("./dist/videos/" + currentStream.id + ".webm")
+      currentStream = null
     }
   })
 
@@ -38,9 +53,19 @@ module.exports = function(app) {
     try {
       fs.unlinkSync(`./dist/videos/${id}.webm`)
     } catch (err) {
-      console.error(err)
-      res.json({ error: true })
+      res.json({ error: true, err })
     }
     res.json({ error: false })
+  })
+
+  app.get("/api/cancel", (req, res) => {
+    try {
+      currentStream && currentStream.destroy("Canceled")
+      fs.unlinkSync("./dist/videos/" + currentStream.id + ".webm")
+      currentStream = null
+      res.json({ error: false })
+    } catch (err) {
+      res.json({ error: true, err })
+    }
   })
 }

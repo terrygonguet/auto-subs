@@ -1,8 +1,9 @@
 <template>
   <div class="videolist">
     <div class="controls" v-if="showControls">
-      <button @click="clearVideos">Clear</button>
-      <button @click="download">💾</button>
+      <button @click="clearVideos" :disabled="loading">Clear</button>
+      <button @click="download" :disabled="loading">💾</button>
+      <button @click="cancel" :disabled="!loading">❌</button>
     </div>
     <VideoElement
       v-for="video in videos"
@@ -29,31 +30,50 @@ export default Vue.extend({
       default: true,
     },
   },
+  data() {
+    return {
+      loading: false,
+    }
+  },
   computed: {
     ...mapState(["videos"]),
   },
   methods: {
     remove(id: string) {
-      this.$store
-        .dispatch({
-          type: "removeVideo",
-          id,
-        })
-        .catch(console.error)
+      this.$store.commit({
+        type: "removeVideo",
+        id,
+      })
+      if (!this.videos.length) this.$emit("empty")
     },
     download() {
-      let prom = Promise.resolve()
-      for (const video of this.videos) {
-        prom = prom.then(() =>
-          this.$store.dispatch({
-            type: "downloadVideo",
-            id: video.id,
-          })
-        )
+      this.loading = true
+      const nextVideo = (i: number) => {
+        return (): Promise<void> => {
+          if (!this.videos[i]) return Promise.resolve()
+          else
+            return this.$store
+              .dispatch({
+                type: "downloadVideo",
+                id: this.videos[i].id,
+              })
+              .then(nextVideo(i + 1))
+        }
       }
-      prom.catch(console.error)
+      nextVideo(0)()
+        .catch(console.error)
+        .then(() => (this.loading = false))
     },
-    ...mapActions(["clearVideos"]),
+    clearVideos() {
+      this.$store.dispatch("clearVideos").then(() => {
+        if (!this.videos.length) this.$emit("empty")
+      })
+    },
+    cancel() {
+      this.$store.dispatch("cancelDownload").then(() => {
+        this.loading = false
+      })
+    },
   },
 })
 </script>
@@ -68,6 +88,7 @@ export default Vue.extend({
 
 .videolist {
   overflow-x: auto;
+  overflow-y: visible;
 }
 
 .videolist > * {

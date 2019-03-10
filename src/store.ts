@@ -75,19 +75,17 @@ export default new Vuex.Store({
         else throw new Error("Problem downloading " + video.title)
       } else throw new Error("No video with id " + id)
     },
-    async removeVideo({ state, commit }, { id }: { id: string }) {
-      let video = state.videos.find(v => v.id === id)
-      if (video) {
-        if (video.state === "downloading")
-          throw new Error("Can't remove while downloading")
-        else if (video.state === "finished") await fetch("/api/remove?id=" + id)
+    clearVideos({ state, commit }) {
+      for (const id of state.videos.map(v => v.id)) {
         commit({ type: "removeVideo", id })
       }
     },
-    async clearVideos({ state, dispatch }) {
-      for (const id of state.videos.map(v => v.id)) {
-        await dispatch({ type: "removeVideo", id })
+    async cancelDownload({ state, commit }) {
+      for (const video of state.videos) {
+        if (video.state === "downloading")
+          commit({ type: "setVideoState", id: video.id, state: "queued" })
       }
+      return fetch("/api/cancel")
     },
   },
 })

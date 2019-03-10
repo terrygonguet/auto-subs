@@ -5,23 +5,24 @@
       ref="player"
       class="video"
       @ended="next"
-      @volumechange="changeVolume($event.target)"
+      @volumechange="changeVolume"
       controls
       :autoplay="autoplay"
+      @wheel="scroll"
     ></video>
     <div class="controls">
       <router-link to="/">Back</router-link>
       <div>
-        <button @click="changeSpeed(-0.1)">⏪</button>
+        <span @click="changeSpeed(-0.1)">⏪</span>
         <span>{{ this.playbackSpeed }}x</span>
-        <button @click="changeSpeed(0.1)">⏩</button>
+        <span @click="changeSpeed(0.1)">⏩</span>
       </div>
       <label>
         Autoplay
         <input type="checkbox" v-model="autoplay">
       </label>
     </div>
-    <VideoList @clickVideo="play($event.id)" class="videolist"/>
+    <VideoList @clickVideo="play($event.id)" class="videolist" @empty="$router.push('/')"/>
   </div>
 </template>
 
@@ -30,6 +31,7 @@ import Vue from "vue"
 import VideoList from "@/components/VideoList.vue"
 import { mapState } from "vuex"
 import { VideoData } from "@/store"
+declare var process: any
 
 export default Vue.extend({
   name: "Player",
@@ -42,7 +44,11 @@ export default Vue.extend({
   computed: {
     src(): string {
       if (this.videos[this.index])
-        return `/videos/${this.videos[this.index].id}.webm`
+        return (
+          (process.env.NODE_ENV === "development"
+            ? "http://localhost:7382"
+            : "") + `/videos/${this.videos[this.index].id}.webm`
+        )
       else return ""
     },
     videos(): VideoData[] {
@@ -65,17 +71,29 @@ export default Vue.extend({
     changeSpeed(delta: number) {
       this.$store.commit("setPlaybackSpeed", this.playbackSpeed + delta)
     },
-    changeVolume(player: HTMLVideoElement) {
+    changeVolume() {
+      let player = this.$refs.player as HTMLVideoElement
       this.$store.commit("setVolume", player.volume)
     },
     next() {
       if (this.autoplay && this.videos[this.index + 1]) this.index++
+    },
+    scroll(e: WheelEvent) {
+      let player = this.$refs.player as HTMLVideoElement
+      let volume = this.volume - Math.sign(e.deltaY) * 0.02
+      player.volume = volume > 1 ? 1 : volume < 0 ? 0 : volume
     },
   },
   watch: {
     playbackSpeed(val, old) {
       let player = this.$refs.player as HTMLVideoElement
       player.playbackRate = val
+    },
+    src(val, old) {
+      this.$nextTick(() => {
+        let player = this.$refs.player as HTMLVideoElement
+        player.playbackRate = this.playbackSpeed
+      })
     },
   },
   mounted() {
