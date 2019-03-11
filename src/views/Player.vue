@@ -38,16 +38,16 @@ export default Vue.extend({
   components: { VideoList },
   data() {
     return {
-      index: 0,
+      currentlyPlaying: "",
     }
   },
   computed: {
     src(): string {
-      if (this.videos[this.index])
+      if (this.currentlyPlaying)
         return (
           (process.env.NODE_ENV === "development"
             ? "http://localhost:7382"
-            : "") + `/videos/${this.videos[this.index].id}.webm`
+            : "") + `/videos/${this.currentlyPlaying}.webm`
         )
       else return ""
     },
@@ -66,7 +66,7 @@ export default Vue.extend({
   },
   methods: {
     play(id: string) {
-      this.index = this.videos.findIndex(v => v.id === id)
+      this.currentlyPlaying = id
     },
     changeSpeed(delta: number) {
       this.$store.commit("setPlaybackSpeed", this.playbackSpeed + delta)
@@ -76,7 +76,10 @@ export default Vue.extend({
       this.$store.commit("setVolume", player.volume)
     },
     next() {
-      if (this.autoplay && this.videos[this.index + 1]) this.index++
+      let i = this.videos.findIndex(v => v.id === this.currentlyPlaying)
+      if (this.autoplay && this.videos[i++]) {
+        this.currentlyPlaying = this.videos[i].id
+      }
     },
     scroll(e: WheelEvent) {
       let player = this.$refs.player as HTMLVideoElement
@@ -100,6 +103,7 @@ export default Vue.extend({
     let player = this.$refs.player as HTMLVideoElement
     player.playbackRate = this.playbackSpeed
     player.volume = this.volume
+    this.currentlyPlaying = this.videos[0].id
   },
 })
 </script>

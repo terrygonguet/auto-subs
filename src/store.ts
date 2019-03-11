@@ -10,7 +10,10 @@ export type VideoData = {
   id: string
   thumbnail: string
   duration: string
+  live?: boolean
 }
+
+export type Source = "subs" | "wl" | "playlist"
 
 export default new Vuex.Store({
   state: {
@@ -20,6 +23,7 @@ export default new Vuex.Store({
     history: [] as string[],
     volume: 1,
     autoplay: true,
+    source: "subs" as Source,
   },
   mutations: {
     setCookie(state, cookie: string) {
@@ -44,6 +48,9 @@ export default new Vuex.Store({
       if (videoState == "finished" && state.history.indexOf(id) === -1)
         state.history.push(id)
     },
+    setSource(state, { source }: { source: Source }) {
+      state.source = source
+    },
     restoreFromLocal(state) {
       let data = JSON.parse(localStorage.getItem("autoSubs") || "{}")
       for (const key in data) {
@@ -61,6 +68,16 @@ export default new Vuex.Store({
     },
     setAutoplay(state, autoplay: boolean) {
       state.autoplay = autoplay
+    },
+    reorderVideo(state, { id, delta }: { id: string; delta: 1 | -1 }) {
+      let i = state.videos.findIndex(v => v.id === id)
+      let l = state.videos.length
+      if (i !== -1) {
+        let video = state.videos.splice(i, 1)
+        i += delta
+        i = i < 0 ? 0 : i >= l ? l - 1 : i
+        state.videos.splice(i, 0, ...video)
+      }
     },
   },
   actions: {

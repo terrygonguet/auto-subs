@@ -1,9 +1,15 @@
 <template>
   <div class="video" :class="{ watched }" @click="click">
-    <img :src="thumbnail" class="thumbnail">
+    <img :src="thumbnailSrc" class="thumbnail">
     <span class="title">{{ title }}</span>
     <span class="duration">{{ duration }}</span>
-    <div class="remove" v-if="showControls" @click="remove" :style="stateStyle">❌</div>
+    <div class="controls" v-if="showControls">
+      <div class="remove" @click.stop="remove" :style="stateStyle">❌</div>
+      <div class="reorder">
+        <span @click.stop="$emit('reorder', -1)">⏫</span>
+        <span @click.stop="$emit('reorder', 1)">⏬</span>
+      </div>
+    </div>
     <div class="live" v-if="live"></div>
   </div>
 </template>
@@ -61,6 +67,9 @@ export default Vue.extend({
           return {}
       }
     },
+    thumbnailSrc(): string {
+      return this.thumbnail || `https://i.ytimg.com/vi/${this.id}/hqdefault.jpg`
+    },
   },
   methods: {
     click(e: Event) {
@@ -109,24 +118,36 @@ export default Vue.extend({
 }
 
 .live {
-  width: 5px;
-  height: 5px;
+  width: 15px;
+  height: 15px;
   border-radius: 100em;
   position: absolute;
-  top: 0;
-  right: 0;
+  bottom: 0;
+  left: 0;
   margin: 5px;
+  background-color: red;
+  border: 1px solid #eee;
 }
 
-.remove {
+.controls {
   position: absolute;
   font-size: 80%;
   display: flex;
   flex-direction: row;
+}
+
+.remove {
+  margin: 5px;
   padding: 5px;
   background-color: darkgrey;
   border: 1px solid #eee;
-  margin: 5px;
   border-radius: 3px;
+}
+
+.reorder {
+  margin: 5px;
+  border-radius: 5px;
+  border: 1px solid #eee;
+  padding: 5px;
 }
 </style>

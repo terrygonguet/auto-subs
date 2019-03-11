@@ -28,13 +28,16 @@ module.exports = function(app) {
       else if (currentStream) {
         res.json({ error: true, err: "Already downloading" })
       } else {
+        console.log("Downloading " + id)
         currentStream = ytdl("http://www.youtube.com/watch?v=" + id)
           .pipe(fs.createWriteStream(`./dist/videos/${id}.webm`))
           .on("error", err => {
+            console.log("Error " + id)
             !res.headersSent && res.json({ error: true, err })
             currentStream = null
           })
           .on("close", () => {
+            console.log("Finished " + id)
             !res.headersSent && res.json({ error: false })
             currentStream = null
           })

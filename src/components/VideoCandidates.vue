@@ -5,11 +5,14 @@
     </div>
     <div class="controls">
       <button @click="refresh">Refresh</button>
-      <select v-model="source">
+      <select v-model="source" @change="setSource">
         <option value="subs">Subscriptions</option>
         <option value="wl">Watch Later</option>
+        <option value="playlist">A Playlist</option>
       </select>
       <button @click="gotoPlayer">🎦Player</button>
+      <button @click="addAll" v-if="source != 'subs'">Add all</button>
+      <input type="text" v-model="playlist" v-if="source == 'playlist'">
     </div>
     <div class="candidates">
       <VideoElement
@@ -17,7 +20,7 @@
         v-for="video in videos"
         :key="video.id"
         v-bind="video"
-        @click="addToList"
+        @click="addToList(video)"
       />
     </div>
   </div>
@@ -28,35 +31,58 @@ import Vue from "vue"
 import { mapState } from "vuex"
 import VideoElement from "./VideoElement.vue"
 import LoadingSpinner from "./LoadingSpinner.vue"
-
-type VideoElement = {
-  title: string
-  id: string
-  duration: string
-  thumbnail: string
-} & Vue
+import { VideoData, Source } from "@/store"
 
 export default Vue.extend({
   name: "VideoCandidates",
   components: { VideoElement, LoadingSpinner },
   data() {
     return {
-      videos: [] as object,
-      source: "subs",
+      videos: [] as object[],
       loading: false,
+      playlist: "",
     }
   },
   computed: {
-    ...mapState(["cookie", "history"]),
+    history(): string[] {
+      return this.$store.state.history
+    },
+    cookie(): string {
+      return this.$store.state.cookie
+    },
+    source(): Source {
+      return this.$store.state.source
+    },
+    subsURL(): string {
+      return `/api/proxy?url=${encodeURIComponent(
+        "https://www.youtube.com/feed/subscriptions"
+      )}&cookie=${encodeURIComponent(this.cookie)}`
+    },
+    playlistURL(): string {
+      return `/api/proxy?url=${encodeURIComponent(
+        `https://www.youtube.com/playlist?list=${
+          this.playlistID
+        }&disable_polymer=true`
+      )}&cookie=${encodeURIComponent(this.cookie)}`
+    },
+    playlistID(): string {
+      let res = /(?:https:\/\/www\.youtube\.com\/playlist\?list=)?(.+?)(?:&disable_polymer=true)?$/.exec(
+        this.playlist
+      )
+      return res ? res[1] : ""
+    },
+    debouncedRefresh(): Function {
+      let timeout: number
+      return () => {
+        timeout && clearTimeout(timeout)
+        timeout = setTimeout(this.refresh, 500)
+      }
+    },
   },
   methods: {
     async getSubs() {
       this.loading = true
-      let res = await fetch(
-        `/api/proxy?url=${encodeURIComponent(
-          "https://www.youtube.com/feed/subscriptions"
-        )}&cookie=${encodeURIComponent(this.cookie)}`
-      )
+      let res = await fetch(this.subsURL)
       let html = await res.text()
       let el = document.createElement("div")
       el.innerHTML = html
@@ -68,7 +94,7 @@ export default Vue.extend({
             ".yt-thumb-simple > img"
           ) as HTMLImageElement
           let durationEl = vEl.querySelector(".video-time")
-          let id = (vEl as HTMLElement).dataset.contextItemId
+          let id = (vEl as HTMLElement).dataset.contextItemId || ""
           return {
             title: titleEl ? titleEl.textContent : null,
             thumbnail: thumbEl ? thumbEl.src : null,
@@ -83,30 +109,70 @@ export default Vue.extend({
       )
       this.loading = false
     },
+    async getWL() {
+      this.playlist = "WL"
+      await this.getPlaylist()
+    },
+    async getPlaylist() {
+      if (!this.playlistID) return
+      this.loading = true
+      let res = await fetch(this.playlistURL)
+      let html = await res.text()
+      let el = document.createElement("div")
+      el.innerHTML = html
+      // console.log(el)
+      this.videos = Array.from(el.querySelectorAll(".pl-video")).map(vEl => {
+        let titleEl = vEl.querySelector(".pl-video-title-link")
+        let durationEl = vEl.querySelector(".timestamp")
+        let id = (vEl as HTMLElement).dataset.videoId || ""
+        return {
+          title: titleEl ? titleEl.textContent : null,
+          duration: durationEl ? durationEl.textContent : null,
+          id,
+          watched:
+            !!vEl.querySelector(".resume-playback-background") ||
+            this.history.indexOf(id) !== -1,
+          live: !vEl.querySelector(".timestamp"), // only one !
+        }
+      })
+      this.loading = false
+    },
     refresh() {
       if (this.source === "subs") this.getSubs()
-      else if (this.source === "wl") throw "WIP"
+      else if (this.source === "wl") this.getWL()
+      else if (this.source === "playlist") this.getPlaylist()
       else throw "wat"
     },
-    addToList(e: VideoElement) {
-      let videoData = {
-        title: e.title,
-        id: e.id,
-        duration: e.duration,
-        thumbnail: e.thumbnail,
-        state: "queued",
-      }
+    addToList(video: any) {
+      // TODO: better
+      let data = Object.assign({ state: "queued" }, video)
+      delete data.watched
       this.$store.commit({
         type: "addVideo",
-        video: videoData,
+        video: data,
       })
+    },
+    addAll() {
+      this.videos.forEach(this.addToList)
     },
     gotoPlayer() {
       this.$router.push("/player")
     },
+    setSource(e: Event) {
+      this.$store.commit({
+        type: "setSource",
+        source: (e.target as HTMLSelectElement).value,
+      })
+      this.refresh()
+    },
+  },
+  watch: {
+    playlist(val, old) {
+      this.debouncedRefresh()
+    },
   },
   mounted() {
-    this.getSubs()
+    this.refresh()
   },
 })
 </script>
