@@ -1,16 +1,20 @@
 const express = require("express")
 const setupApi = require("./setup-api")
+const setupSocket = require("./setup-socket")
 const CronJob = require("cron").CronJob
 const fs = require("fs")
+const http = require("http")
 
 const MAX_SIZE = process.env.MAX_SIZE || 10 * 1024 ** 3
 const MAX_NB_VIDS = process.env.MAX_NB_VIDS || 50
 
 const app = express()
+const server = http.createServer(app)
 setupApi(app)
+setupSocket(server)
 app.use(express.static("dist"))
 
-app.listen(process.env.PORT, () =>
+server.listen(process.env.PORT, () =>
   console.log("Server started on port " + process.env.PORT)
 )
 

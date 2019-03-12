@@ -1,5 +1,6 @@
 import Vue from "vue"
 import Vuex from "vuex"
+import socket, { events as socketEvents } from "./socket"
 
 Vue.use(Vuex)
 
@@ -15,7 +16,7 @@ export type VideoData = {
 
 export type Source = "subs" | "wl" | "playlist"
 
-export default new Vuex.Store({
+const store = new Vuex.Store({
   state: {
     cookie: "",
     videos: [] as VideoData[],
@@ -81,15 +82,12 @@ export default new Vuex.Store({
     },
   },
   actions: {
-    async downloadVideo({ state, commit }, { id }: { id: string }) {
+    downloadVideo({ state, commit }, { id }: { id: string }) {
       let video = state.videos.find(v => v.id === id)
       if (video) {
         commit({ type: "setVideoState", id, state: "downloading" })
-        let res = await fetch("/api/download?id=" + id)
-        let json = await res.json()
-        if (!json.error)
-          commit({ type: "setVideoState", id, state: "finished" })
-        else throw new Error("Problem downloading " + video.title)
+        let data = { type: "download", id }
+        socket.send(JSON.stringify(data))
       } else throw new Error("No video with id " + id)
     },
     clearVideos({ state, commit }) {
@@ -97,12 +95,20 @@ export default new Vuex.Store({
         commit({ type: "removeVideo", id })
       }
     },
-    async cancelDownload({ state, commit }) {
+    cancelDownload({ state, commit }) {
       for (const video of state.videos) {
         if (video.state === "downloading")
           commit({ type: "setVideoState", id: video.id, state: "queued" })
       }
-      return fetch("/api/cancel")
+      let data = { type: "cancel" }
+      socket.send(JSON.stringify(data))
     },
   },
 })
+
+socketEvents.onVideoDownloaded = (id: string) => {
+  store.commit({ type: "setVideoState", id, state: "finished" })
+}
+socketEvents.onError = console.error
+
+export default store

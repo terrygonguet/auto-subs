@@ -50,22 +50,26 @@ export default Vue.extend({
     },
     download() {
       this.loading = true
-      const nextVideo = (i: number) => {
-        return (): Promise<void> => {
-          if (!this.videos[i]) return Promise.resolve()
-          else if (this.videos[i].live) return nextVideo(i + 1)()
-          else
-            return this.$store
-              .dispatch({
-                type: "downloadVideo",
-                id: this.videos[i].id,
-              })
-              .then(nextVideo(i + 1))
+      const download = (index: number = 0) => {
+        if (!this.videos[index]) {
+          this.loading = false
+          return
         }
+        this.$store.dispatch({
+          type: "downloadVideo",
+          id: this.videos[index].id,
+        })
+        let unwatch = this.$watch(
+          () => this.videos[index].state,
+          (val, old) => {
+            if (val === "finished") {
+              unwatch()
+              download(index + 1)
+            }
+          }
+        )
       }
-      nextVideo(0)()
-        .catch(console.error)
-        .then(() => (this.loading = false))
+      download()
     },
     clearVideos() {
       this.$store.dispatch("clearVideos").then(() => {
@@ -93,8 +97,8 @@ export default Vue.extend({
 }
 
 .videolist {
-  overflow-x: auto;
-  overflow-y: visible;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .videolist > * {

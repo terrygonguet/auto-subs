@@ -12,7 +12,12 @@
       </select>
       <button @click="gotoPlayer">🎦Player</button>
       <button @click="addAll" v-if="source != 'subs'">Add all</button>
-      <input type="text" v-model="playlist" v-if="source == 'playlist'">
+      <input
+        type="text"
+        v-model="playlist"
+        v-if="source == 'playlist'"
+        placeholder="Playlist link or ID"
+      >
     </div>
     <div class="candidates">
       <VideoElement
@@ -163,11 +168,15 @@ export default Vue.extend({
         type: "setSource",
         source: (e.target as HTMLSelectElement).value,
       })
-      this.refresh()
     },
   },
   watch: {
     playlist(val, old) {
+      this.debouncedRefresh()
+    },
+    source(val, old) {
+      this.videos = []
+      this.playlist = ""
       this.debouncedRefresh()
     },
   },
