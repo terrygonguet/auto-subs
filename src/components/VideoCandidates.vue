@@ -36,14 +36,14 @@ import Vue from "vue"
 import { mapState } from "vuex"
 import VideoElement from "./VideoElement.vue"
 import LoadingSpinner from "./LoadingSpinner.vue"
-import { VideoData, Source } from "@/store"
+import { VideoData, Source, VideoState } from "@/store"
 
 export default Vue.extend({
   name: "VideoCandidates",
   components: { VideoElement, LoadingSpinner },
   data() {
     return {
-      videos: [] as object[],
+      videos: [] as VideoData[],
       loading: false,
       playlist: "",
     }
@@ -101,10 +101,12 @@ export default Vue.extend({
           let durationEl = vEl.querySelector(".video-time")
           let id = (vEl as HTMLElement).dataset.contextItemId || ""
           return {
-            title: titleEl ? titleEl.textContent : null,
-            thumbnail: thumbEl ? thumbEl.src : null,
-            duration: durationEl ? durationEl.textContent : null,
+            title: titleEl ? titleEl.textContent || "" : "",
+            thumbnail: thumbEl ? thumbEl.src : "",
+            duration: durationEl ? durationEl.textContent || "" : "0:00",
             id,
+            state: "queued" as VideoState,
+            progress: 0,
             watched:
               !!vEl.querySelector(".watched-badge") ||
               this.history.indexOf(id) !== -1,
@@ -131,9 +133,12 @@ export default Vue.extend({
         let durationEl = vEl.querySelector(".timestamp")
         let id = (vEl as HTMLElement).dataset.videoId || ""
         return {
-          title: titleEl ? titleEl.textContent : null,
-          duration: durationEl ? durationEl.textContent : null,
+          title: titleEl ? titleEl.textContent || "" : "",
+          duration: durationEl ? durationEl.textContent || "" : "",
+          thumbnail: "",
           id,
+          state: "queued" as VideoState,
+          progress: 0,
           watched:
             !!vEl.querySelector(".resume-playback-background") ||
             this.history.indexOf(id) !== -1,
@@ -152,10 +157,7 @@ export default Vue.extend({
       // TODO: better
       let data = Object.assign({ state: "queued" }, video)
       delete data.watched
-      this.$store.commit({
-        type: "addVideo",
-        video: data,
-      })
+      this.$store.commit("addVideo", data)
     },
     addAll() {
       this.videos.forEach(this.addToList)
@@ -164,10 +166,7 @@ export default Vue.extend({
       this.$router.push("/player")
     },
     setSource(e: Event) {
-      this.$store.commit({
-        type: "setSource",
-        source: (e.target as HTMLSelectElement).value,
-      })
+      this.$store.commit("setSource", (e.target as HTMLSelectElement).value)
     },
   },
   watch: {

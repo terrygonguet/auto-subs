@@ -6,7 +6,7 @@ Vue.use(Vuex)
 
 export type VideoData = {
   title: string
-  state: "queued" | "downloading" | "finished"
+  state: VideoState
   progress: number
   id: string
   thumbnail: string
@@ -15,6 +15,8 @@ export type VideoData = {
 }
 
 export type Source = "subs" | "wl" | "playlist"
+
+export type VideoState = "queued" | "downloading" | "finished"
 
 const store = new Vuex.Store({
   state: {
@@ -25,50 +27,15 @@ const store = new Vuex.Store({
     volume: 1,
     autoplay: true,
     source: "subs" as Source,
+    removeAfterView: true,
   },
   mutations: {
-    setCookie(state, cookie: string) {
-      state.cookie = cookie
-    },
-    addVideo(state, { video }: { video: VideoData }) {
+    addVideo(state, video: VideoData) {
       if (!state.videos.find(v => v.id === video.id)) state.videos.push(video)
     },
-    removeVideo(state, { id }: { id: string }) {
+    removeVideo(state, id: string) {
       let i = state.videos.findIndex(v => v.id === id)
       if (i !== -1) state.videos.splice(i, 1)
-    },
-    setVideoState(
-      state,
-      {
-        id,
-        state: videoState,
-      }: { id: string; state: "downloading" | "finished" }
-    ) {
-      let video = state.videos.find(v => v.id === id)
-      if (video) video.state = videoState
-      if (videoState == "finished" && state.history.indexOf(id) === -1)
-        state.history.push(id)
-    },
-    setSource(state, { source }: { source: Source }) {
-      state.source = source
-    },
-    restoreFromLocal(state) {
-      let data = JSON.parse(localStorage.getItem("autoSubs") || "{}")
-      for (const key in data) {
-        Vue.set(state, key, data[key])
-      }
-    },
-    saveToLocal(state) {
-      localStorage.setItem("autoSubs", JSON.stringify(state))
-    },
-    setPlaybackSpeed(state, speed: number) {
-      state.playbackSpeed = parseFloat(speed.toPrecision(2))
-    },
-    setVolume(state, val: number) {
-      state.volume = val < 0 ? 0 : val > 1 ? 1 : val
-    },
-    setAutoplay(state, autoplay: boolean) {
-      state.autoplay = autoplay
     },
     reorderVideo(state, { id, delta }: { id: string; delta: 1 | -1 }) {
       let i = state.videos.findIndex(v => v.id === id)
@@ -80,9 +47,54 @@ const store = new Vuex.Store({
         state.videos.splice(i, 0, ...video)
       }
     },
+
+    restoreFromLocal(state) {
+      let data = JSON.parse(localStorage.getItem("autoSubs") || "{}")
+      for (const key in data) {
+        Vue.set(state, key, data[key])
+      }
+    },
+    saveToLocal(state) {
+      localStorage.setItem("autoSubs", JSON.stringify(state))
+    },
+
+    setCookie(state, cookie: string) {
+      state.cookie = cookie
+    },
+    setVideoState(
+      state,
+      { id, state: videoState }: { id: string; state: VideoState }
+    ) {
+      let video = state.videos.find(v => v.id === id)
+      if (video) video.state = videoState
+      if (videoState == "finished" && state.history.indexOf(id) === -1)
+        state.history.push(id)
+    },
+    setVideoProgress(
+      state,
+      { id, progress }: { id: string; progress: number }
+    ) {
+      let video = state.videos.find(v => v.id === id)
+      if (video) video.progress = progress
+    },
+    setSource(state, source: Source) {
+      state.source = source
+    },
+    setPlaybackSpeed(state, speed: number) {
+      state.playbackSpeed = parseFloat(speed.toPrecision(2))
+    },
+    setVolume(state, val: number) {
+      state.volume = val < 0 ? 0 : val > 1 ? 1 : val
+    },
+    setAutoplay(state, autoplay: boolean) {
+      state.autoplay = autoplay
+    },
+    setRemoveAfterView(state, remove: boolean) {
+      state.removeAfterView = remove
+    },
   },
   actions: {
-    downloadVideo({ state, commit }, { id }: { id: string }) {
+    downloadVideo({ state, commit }, id: string) {
       let video = state.videos.find(v => v.id === id)
       if (video) {
         commit({ type: "setVideoState", id, state: "downloading" })
@@ -92,7 +104,7 @@ const store = new Vuex.Store({
     },
     clearVideos({ state, commit }) {
       for (const id of state.videos.map(v => v.id)) {
-        commit({ type: "removeVideo", id })
+        commit("removeVideo", id)
       }
     },
     cancelDownload({ state, commit }) {
@@ -110,5 +122,8 @@ socketEvents.onVideoDownloaded = (id: string) => {
   store.commit({ type: "setVideoState", id, state: "finished" })
 }
 socketEvents.onError = console.error
+socketEvents.onVideoProgress = (id: string, progress: number) => {
+  store.commit({ type: "setVideoProgress", id, progress })
+}
 
 export default store

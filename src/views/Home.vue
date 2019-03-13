@@ -2,13 +2,11 @@
   <div class="home">
     <VideoCandidates id="candidates"/>
     <VideoList id="videolist"/>
-    <div id="settings">
-      <p v-if="!cookie">
-        <label>
-          YT Cookie:
-          <input type="text" :value="cookie" @input="setCookie($event.target.value)">
-        </label>
-      </p>
+    <div id="settings" v-if="!cookie">
+      <label>
+        YT Cookie:
+        <input type="text" :value="cookie" @input="setCookie($event.target.value)">
+      </label>
     </div>
   </div>
 </template>
@@ -52,5 +50,10 @@ export default Vue.extend({
 
 #settings {
   grid-area: settings;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 1em;
 }
 </style>

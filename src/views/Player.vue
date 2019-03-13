@@ -19,7 +19,15 @@
       </div>
       <label>
         Autoplay
-        <input type="checkbox" v-model="autoplay">
+        <input type="checkbox" :checked="autoplay" @change="setAutoplay">
+      </label>
+      <label>
+        Remove when watched
+        <input
+          type="checkbox"
+          :checked="removeAfterView"
+          @change="setRemoveAfterView"
+        >
       </label>
     </div>
     <VideoList @clickVideo="play($event.id)" class="videolist" @empty="$router.push('/')"/>
@@ -47,7 +55,7 @@ export default Vue.extend({
         return (
           (process.env.NODE_ENV === "development"
             ? "http://localhost:7382"
-            : "") + `/videos/${this.currentlyPlaying}.webm`
+            : location.origin) + `/videos/${this.currentlyPlaying}.webm`
         )
       else return ""
     },
@@ -63,6 +71,9 @@ export default Vue.extend({
     autoplay(): number {
       return this.$store.state.autoplay
     },
+    removeAfterView(): boolean {
+      return this.$store.state.removeAfterView
+    },
   },
   methods: {
     play(id: string) {
@@ -77,14 +88,23 @@ export default Vue.extend({
     },
     next() {
       let i = this.videos.findIndex(v => v.id === this.currentlyPlaying)
-      if (this.autoplay && this.videos[i++]) {
-        this.currentlyPlaying = this.videos[i].id
-      }
+      if (this.removeAfterView)
+        this.$store.commit("removeVideo", this.currentlyPlaying)
+      else i++
+      if (this.videos[i]) this.currentlyPlaying = this.videos[i].id
     },
     scroll(e: WheelEvent) {
       let player = this.$refs.player as HTMLVideoElement
       let volume = this.volume - Math.sign(e.deltaY) * 0.02
       player.volume = volume > 1 ? 1 : volume < 0 ? 0 : volume
+    },
+    setAutoplay(e: Event) {
+      let value = (e.target as HTMLInputElement).checked
+      this.$store.commit("setAutoplay", value)
+    },
+    setRemoveAfterView(e: Event) {
+      let value = (e.target as HTMLInputElement).checked
+      this.$store.commit("setRemoveAfterView", value)
     },
   },
   watch: {

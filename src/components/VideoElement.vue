@@ -4,7 +4,10 @@
     <span class="title">{{ title }}</span>
     <span class="duration">{{ duration }}</span>
     <div class="controls" v-if="showControls">
-      <div class="remove" @click.stop="remove" :style="stateStyle">❌</div>
+      <div class="remove" @click.stop="remove" :style="stateStyle">
+        <div class="progressbar" :style="{ width: progress + '%' }" v-if="state == 'downloading'"></div>
+        <span style="position:absolute;z-index:99">❌</span>❌
+      </div>
       <div class="reorder">
         <span @click.stop="$emit('reorder', -1)">⏫</span>
         <span @click.stop="$emit('reorder', 1)">⏬</span>
@@ -48,20 +51,21 @@ export default Vue.extend({
       type: String,
       default: "none",
     },
+    progress: {
+      type: Number,
+      default: 0,
+    },
   },
   computed: {
     stateStyle(): object {
       switch (this.state) {
         case "queued":
         case "none":
-          return {}
         case "downloading":
-          return {
-            "background-color": "green",
-          }
+          return {}
         case "finished":
           return {
-            "background-color": "blue",
+            "background-color": "#5B5",
           }
         default:
           return {}
@@ -139,9 +143,18 @@ export default Vue.extend({
 .remove {
   margin: 5px;
   padding: 5px;
-  background-color: darkgrey;
   border: 1px solid #eee;
+  background-color: lightgrey;
   border-radius: 3px;
+  position: relative;
+}
+
+.progressbar {
+  position: absolute;
+  height: 100%;
+  background-color: #5b5;
+  top: 0;
+  left: 0;
 }
 
 .reorder {
@@ -149,5 +162,6 @@ export default Vue.extend({
   border-radius: 5px;
   border: 1px solid #eee;
   padding: 5px;
+  background-color: lightgrey;
 }
 </style>

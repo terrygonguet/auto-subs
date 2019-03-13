@@ -13,6 +13,7 @@
       @remove="remove"
       @click="$emit('clickVideo', video)"
       @reorder="reorder(video, $event)"
+      :watched="false"
     />
   </div>
 </template>
@@ -42,10 +43,7 @@ export default Vue.extend({
   },
   methods: {
     remove(id: string) {
-      this.$store.commit({
-        type: "removeVideo",
-        id,
-      })
+      this.$store.commit("removeVideo", id)
       if (!this.videos.length) this.$emit("empty")
     },
     download() {
@@ -55,10 +53,7 @@ export default Vue.extend({
           this.loading = false
           return
         }
-        this.$store.dispatch({
-          type: "downloadVideo",
-          id: this.videos[index].id,
-        })
+        this.$store.dispatch("downloadVideo", this.videos[index].id)
         let unwatch = this.$watch(
           () => this.videos[index].state,
           (val, old) => {

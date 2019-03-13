@@ -12,7 +12,6 @@ module.exports = function(server) {
     socket.on("close", () => console.log("Socket disconnected: " + socket.id))
     socket.on("data", message => {
       let data = JSON.parse(message)
-      console.log("message :", message)
       try {
         switch (data.type) {
           case "download":
@@ -25,9 +24,9 @@ module.exports = function(server) {
             console.error("Unknown command : " + message)
         }
       } catch (error) {
-        this.write(JSON.stringify({ error }))
-        currentStream && currentStream.destroy(err)
-        fs.unlink(videoName(currentStream.id))
+        socket.write(JSON.stringify({ error }))
+        currentStream && currentStream.destroy(error)
+        fs.unlink(videoName(currentStream.id), () => {})
         currentStream = null
       }
     })
@@ -47,7 +46,16 @@ function download(info) {
     this.write(JSON.stringify(data))
   } else {
     console.log("Downloading " + id)
+    let progress = 0
     currentStream = ytdl("http://www.youtube.com/watch?v=" + id)
+      .on("progress", (chunk, cur, total) => {
+        let curProgress = Math.round((cur / total) * 100)
+        if (progress != curProgress) {
+          progress = curProgress
+          let data = { type: "videoprogress", id, progress }
+          this.write(JSON.stringify(data))
+        }
+      })
       .pipe(fs.createWriteStream(videoName(id)))
       .on("error", error => {
         console.log("Error " + id)
@@ -63,7 +71,13 @@ function download(info) {
     currentStream.id = id
   }
 }
-function cancel() {}
+function cancel() {
+  if (currentStream) {
+    currentStream.close("canceled")
+    fs.unlink(videoName(currentStream.id), () => {})
+    currentStream = null
+  }
+}
 
 function videoName(id) {
   return `./dist/videos/${id}.webm`

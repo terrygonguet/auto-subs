@@ -3,16 +3,18 @@ import SockJS from "sockjs-client"
 const socket = new SockJS(location.origin + "/sockjs-node")
 
 socket.onmessage = e => {
-  console.log(e)
   let json = JSON.parse(e.data)
   if (json.error && events.onError) events.onError(json.error)
   else if (json.type == "videodownloaded" && events.onVideoDownloaded)
     events.onVideoDownloaded(json.id)
+  else if (json.type == "videoprogress" && events.onVideoProgress)
+    events.onVideoProgress(json.id, json.progress)
 }
 
 type SocketEvents = {
   onError?: (id: string) => void
   onVideoDownloaded?: (error: any) => void
+  onVideoProgress?: (id: string, progress: number) => void
 }
 
 export const events: SocketEvents = {}
