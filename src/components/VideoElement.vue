@@ -13,12 +13,13 @@
         <span @click.stop="$emit('reorder', 1)">⏬</span>
       </div>
     </div>
-    <div class="live" v-if="live"></div>
+    <div class="live" v-if="live || state=='premiere'"></div>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from "vue"
+import { VideoState } from "@/store"
 export default Vue.extend({
   name: "VideoElement",
   props: {
@@ -58,14 +59,17 @@ export default Vue.extend({
   },
   computed: {
     stateStyle(): object {
-      switch (this.state) {
+      switch (this.state as VideoState) {
         case "queued":
-        case "none":
         case "downloading":
           return {}
         case "finished":
           return {
             "background-color": "#5B5",
+          }
+        case "premiere":
+          return {
+            "background-color": "#B55",
           }
         default:
           return {}

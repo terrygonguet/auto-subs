@@ -91,7 +91,7 @@ export default Vue.extend({
       let html = await res.text()
       let el = document.createElement("div")
       el.innerHTML = html
-      // console.log(el)
+      process.env.NODE_ENV == "development" && console.log(el)
       this.videos = Array.from(el.querySelectorAll(".yt-lockup-video")).map(
         vEl => {
           let titleEl = vEl.querySelector(".yt-lockup-title > a")
@@ -100,12 +100,15 @@ export default Vue.extend({
           ) as HTMLImageElement
           let durationEl = vEl.querySelector(".video-time")
           let id = (vEl as HTMLElement).dataset.contextItemId || ""
+          let isPremiere = !!vEl.querySelector(
+            ".yt-uix-livereminder-main-button"
+          )
           return {
             title: titleEl ? titleEl.textContent || "" : "",
             thumbnail: thumbEl ? thumbEl.src : "",
             duration: durationEl ? durationEl.textContent || "" : "0:00",
             id,
-            state: "queued" as VideoState,
+            state: (isPremiere ? "premiere" : "queued") as VideoState,
             progress: 0,
             watched:
               !!vEl.querySelector(".watched-badge") ||

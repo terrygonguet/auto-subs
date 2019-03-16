@@ -53,13 +53,20 @@ export default Vue.extend({
           this.loading = false
           return
         }
-        this.$store.dispatch("downloadVideo", this.videos[index].id)
-        let unwatch = this.$watch(
+
+        let unwatch: () => void
+        this.$store
+          .dispatch("downloadVideo", this.videos[index].id)
+          .catch(() => {
+            unwatch()
+            download(index + 1)
+          })
+        unwatch = this.$watch(
           () => this.videos[index].state,
           (val, old) => {
             if (val === "finished") {
               unwatch()
-              download(index + 1)
+              this.$nextTick(() => download(index + 1))
             }
           }
         )

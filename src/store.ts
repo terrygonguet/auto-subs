@@ -16,7 +16,7 @@ export type VideoData = {
 
 export type Source = "subs" | "wl" | "playlist"
 
-export type VideoState = "queued" | "downloading" | "finished"
+export type VideoState = "queued" | "downloading" | "finished" | "premiere"
 
 const store = new Vuex.Store({
   state: {
@@ -94,9 +94,12 @@ const store = new Vuex.Store({
     },
   },
   actions: {
-    downloadVideo({ state, commit }, id: string) {
+    async downloadVideo({ state, commit }, id: string) {
       let video = state.videos.find(v => v.id === id)
       if (video) {
+        if (video.state === "premiere" || video.live)
+          throw new Error("Can't download premières and livestreams")
+
         commit({ type: "setVideoState", id, state: "downloading" })
         let data = { type: "download", id }
         socket.send(JSON.stringify(data))
