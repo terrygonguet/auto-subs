@@ -1,5 +1,6 @@
 <template>
   <div class="player">
+    <div class="fullwidth" @click="toggleFullwidth">📺</div>
     <video
       :src="src"
       ref="player"
@@ -10,7 +11,7 @@
       :autoplay="autoplay"
       @wheel="scroll"
     ></video>
-    <div class="controls">
+    <div class="controls" v-if="!fullwidth">
       <router-link to="/">Back</router-link>
       <div>
         <span @click="changeSpeed(-0.1)">⏪</span>
@@ -30,7 +31,6 @@
         >
       </label>
     </div>
-    <VideoList @clickVideo="play($event.id)" class="videolist" @empty="$router.push('/')"/>
   </div>
 </template>
 
@@ -74,6 +74,9 @@ export default Vue.extend({
     removeAfterView(): boolean {
       return this.$store.state.removeAfterView
     },
+    fullwidth(): boolean {
+      return this.$store.state.fullwidth
+    },
   },
   methods: {
     play(id: string) {
@@ -92,6 +95,7 @@ export default Vue.extend({
         this.$store.commit("removeVideo", this.currentlyPlaying)
       else i++
       if (this.videos[i]) this.currentlyPlaying = this.videos[i].id
+      else this.$router.go(-1)
     },
     scroll(e: WheelEvent) {
       let player = this.$refs.player as HTMLVideoElement
@@ -105,6 +109,9 @@ export default Vue.extend({
     setRemoveAfterView(e: Event) {
       let value = (e.target as HTMLInputElement).checked
       this.$store.commit("setRemoveAfterView", value)
+    },
+    toggleFullwidth() {
+      this.$store.commit("setFullwidth", !this.fullwidth)
     },
   },
   watch: {
@@ -130,12 +137,8 @@ export default Vue.extend({
 
 <style lang="postcss" scoped>
 .player {
-  display: grid;
-  grid-template-columns: 1fr 350px;
-  grid-template-rows: auto 1fr;
-  grid-template-areas:
-    "player videolist"
-    "controls videolist";
+  display: flex;
+  flex-direction: column;
   height: 100%;
 }
 
@@ -160,6 +163,19 @@ export default Vue.extend({
 a {
   color: #eee;
   font-weight: bold;
+}
+
+.fullwidth {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  padding: 0.5rem;
+  opacity: 0.1;
+  cursor: pointer;
+}
+
+.fullwidth:hover {
+  opacity: 1;
 }
 </style>
 

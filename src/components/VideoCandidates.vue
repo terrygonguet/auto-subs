@@ -197,12 +197,16 @@ export default Vue.extend({
 .candidates {
   display: grid;
   grid-gap: 1em;
-  margin: 1em;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  margin: 0 1em;
+  grid-template-columns: repeat(auto-fit, minmax(30%, 1fr));
 }
 
 .controls {
-  margin: 1em;
+  padding: 1em;
+  position: sticky;
+  top: 0;
+  background: #333;
+  z-index: 100;
 }
 
 .video {

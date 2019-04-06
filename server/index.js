@@ -14,6 +14,10 @@ setupApi(app)
 setupSocket(server)
 app.use(express.static("dist"))
 
+app.get("/*", (req, res) => {
+  res.redirect("/")
+})
+
 server.listen(process.env.PORT, () =>
   console.log("Server started on port " + process.env.PORT)
 )

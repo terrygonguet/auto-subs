@@ -1,5 +1,5 @@
 <template>
-  <div class="videolist">
+  <div class="videolist" v-show="show">
     <div class="controls" v-if="showControls">
       <button @click="clearVideos" v-if="!loading">Clear</button>
       <button @click="download" v-if="!loading">💾</button>
@@ -39,7 +39,12 @@ export default Vue.extend({
     }
   },
   computed: {
-    ...mapState(["videos"]),
+    videos(): VideoData[] {
+      return this.$store.state.videos
+    },
+    show(): boolean {
+      return this.$route.name != "player" || !this.$store.state.fullwidth
+    },
   },
   methods: {
     remove(id: string) {
@@ -96,14 +101,19 @@ export default Vue.extend({
   flex-direction: row;
   justify-content: center;
   align-items: center;
+  position: sticky;
+  top: 0;
+  background: #333;
+  z-index: 100;
 }
 
 .videolist {
   overflow-x: hidden;
   overflow-y: auto;
+  width: 20%;
 }
 
 .videolist > * {
-  margin: 0.5em;
+  padding: 0.5em;
 }
 </style>

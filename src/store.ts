@@ -28,6 +28,7 @@ const store = new Vuex.Store({
     autoplay: true,
     source: "subs" as Source,
     removeAfterView: true,
+    fullwidth: false,
   },
   mutations: {
     addVideo(state, video: VideoData) {
@@ -91,6 +92,9 @@ const store = new Vuex.Store({
     },
     setRemoveAfterView(state, remove: boolean) {
       state.removeAfterView = remove
+    },
+    setFullwidth(state, fullwidth: boolean) {
+      state.fullwidth = fullwidth
     },
   },
   actions: {
