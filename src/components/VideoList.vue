@@ -110,7 +110,7 @@ export default Vue.extend({
 .videolist {
   overflow-x: hidden;
   overflow-y: auto;
-  width: 20%;
+  width: 25%;
 }
 
 .videolist > * {

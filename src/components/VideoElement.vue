@@ -1,7 +1,7 @@
 <template>
   <div class="video" :class="{ watched }" @click="click">
     <img :src="thumbnailSrc" class="thumbnail">
-    <span class="title">{{ title }}</span>
+    <span class="title">{{ title | short }}</span>
     <span class="duration">{{ duration }}</span>
     <div class="controls" v-if="showControls">
       <div class="remove" @click.stop="remove" :style="stateStyle">
@@ -90,6 +90,12 @@ export default Vue.extend({
       this.$emit("download", this.id)
     },
   },
+  filters: {
+    short(val: any) {
+      if (typeof val == "string") return val.slice(0, 50)
+      else return val
+    },
+  },
 })
 </script>
 
@@ -116,7 +122,8 @@ export default Vue.extend({
 
 .thumbnail {
   grid-area: thumbnail;
-  width: 175px;
+  width: 125px;
+  align-self: center;
 }
 
 .duration {
