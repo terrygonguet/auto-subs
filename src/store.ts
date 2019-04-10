@@ -29,6 +29,7 @@ const store = new Vuex.Store({
     source: "subs" as Source,
     removeAfterView: true,
     fullwidth: false,
+    currentlyPlaying: "",
   },
   mutations: {
     addVideo(state, video: VideoData) {
@@ -95,6 +96,10 @@ const store = new Vuex.Store({
     },
     setFullwidth(state, fullwidth: boolean) {
       state.fullwidth = fullwidth
+    },
+
+    play(state, id: string) {
+      state.currentlyPlaying = id
     },
   },
   actions: {

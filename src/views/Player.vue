@@ -44,12 +44,10 @@ declare var process: any
 export default Vue.extend({
   name: "Player",
   components: { VideoList },
-  data() {
-    return {
-      currentlyPlaying: "",
-    }
-  },
   computed: {
+    currentlyPlaying(): string {
+      return this.$store.state.currentlyPlaying
+    },
     src(): string {
       if (this.currentlyPlaying)
         return (
@@ -80,7 +78,7 @@ export default Vue.extend({
   },
   methods: {
     play(id: string) {
-      this.currentlyPlaying = id
+      this.$store.commit("play", id)
     },
     changeSpeed(delta: number) {
       this.$store.commit("setPlaybackSpeed", this.playbackSpeed + delta)
@@ -94,7 +92,7 @@ export default Vue.extend({
       if (this.removeAfterView)
         this.$store.commit("removeVideo", this.currentlyPlaying)
       else i++
-      if (this.videos[i]) this.currentlyPlaying = this.videos[i].id
+      if (this.videos[i]) this.$store.commit("play", this.videos[i].id)
       else this.$router.go(-1)
     },
     scroll(e: WheelEvent) {
@@ -130,7 +128,8 @@ export default Vue.extend({
     let player = this.$refs.player as HTMLVideoElement
     player.playbackRate = this.playbackSpeed
     player.volume = this.volume
-    this.currentlyPlaying = this.videos[0].id
+    if (!this.videos.find(v => v.id == this.currentlyPlaying))
+      this.$store.commit("play", this.videos[0].id)
   },
 })
 </script>

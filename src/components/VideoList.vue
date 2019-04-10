@@ -11,7 +11,7 @@
       v-bind="video"
       :show-controls="showControls"
       @remove="remove"
-      @click="$emit('clickVideo', video)"
+      @click="play(video.id)"
       @reorder="reorder(video, $event)"
       :watched="false"
     />
@@ -90,6 +90,10 @@ export default Vue.extend({
     },
     reorder(video: VideoData, delta: number) {
       this.$store.commit({ type: "reorderVideo", id: video.id, delta })
+    },
+    play(id: string) {
+      if (this.$route.name != "player") this.$router.push("/player")
+      this.$store.commit("play", id)
     },
   },
 })
