@@ -1,7 +1,6 @@
 <template>
   <div class="videolist" v-show="show">
     <div class="controls" v-if="showControls">
-      <button @click="clearVideos" v-if="!loading">Clear</button>
       <button @click="download" v-if="!loading">💾</button>
       <button @click="cancel" v-else>❌</button>
     </div>
