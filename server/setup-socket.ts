@@ -1,38 +1,41 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const sockjs = require("sockjs");
-const downloader_1 = require("./downloader");
-module.exports = function (server) {
-    const io = sockjs.createServer({
-        prefix: "/sockjs-node",
-        sockjs_url: "http://cdn.jsdelivr.net/sockjs/1.1.1/sockjs.min.js",
-    });
-    io.on("connection", socket => {
-        console.log("Socket connected: " + socket.id);
-        socket.on("close", () => console.log("Socket disconnected: " + socket.id));
-        socket.on("data", message => {
-            let data = JSON.parse(message);
-            try {
-                switch (data.type) {
-                    case "download":
-                        downloader_1.download(data.ids, socket);
-                        break;
-                    case "cancel":
-                        downloader_1.cancel(socket);
-                        break;
-                    default:
-                        console.error("Unknown command : " + message);
-                }
-            }
-            catch (error) {
-                console.error(error);
-                socket.write(JSON.stringify({ error }));
-            }
-        });
-    });
-    io.installHandlers(server);
-};
+import sockjs = require("sockjs")
+import { Express } from "express"
+import { download, cancel } from "./downloader"
+
+module.exports = function(server: Express) {
+  const io = sockjs.createServer({
+    prefix: "/sockjs-node",
+    sockjs_url: "http://cdn.jsdelivr.net/sockjs/1.1.1/sockjs.min.js",
+  })
+  io.on("connection", socket => {
+    console.log("Socket connected: " + socket.id)
+    socket.on("close", () => console.log("Socket disconnected: " + socket.id))
+
+    socket.on("data", message => {
+      let data = JSON.parse(message)
+      try {
+        switch (data.type) {
+          case "download":
+            download(data.ids, socket)
+            break
+          case "cancel":
+            cancel(socket)
+            break
+          default:
+            console.error("Unknown command : " + message)
+        }
+      } catch (error) {
+        console.error(error)
+        socket.write(JSON.stringify({ error }))
+      }
+    })
+  })
+
+  io.installHandlers(server as any)
+}
+
 // let currentStream: (fs.WriteStream & { id?: string }) | null = null
+
 // function download(this: sockjs.Connection, info: any) {
 //   let id = info.id
 //   if (fs.existsSync(videoName(id))) {
@@ -79,6 +82,7 @@ module.exports = function (server) {
 //     console.error(error)
 //   }
 // }
+
 // function videoName(id: string) {
 //   return `./dist/videos/${id}.webm`
 // }

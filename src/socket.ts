@@ -9,12 +9,15 @@ socket.onmessage = e => {
     events.onVideoDownloaded(json.id)
   else if (json.type == "videoprogress" && events.onVideoProgress)
     events.onVideoProgress(json.id, json.progress)
+  else if (json.type == "downloadfinished" && events.onDownloadFinished)
+    events.onDownloadFinished()
 }
 
 type SocketEvents = {
   onError?: (id: string) => void
   onVideoDownloaded?: (error: any) => void
   onVideoProgress?: (id: string, progress: number) => void
+  onDownloadFinished?: () => void
 }
 
 export const events: SocketEvents = {}

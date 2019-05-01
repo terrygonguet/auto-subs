@@ -30,6 +30,7 @@ const store = new Vuex.Store({
     removeAfterView: true,
     fullwidth: false,
     currentlyPlaying: "",
+    isDownloading: false,
   },
   mutations: {
     addVideo(state, video: VideoData) {
@@ -68,7 +69,10 @@ const store = new Vuex.Store({
       { id, state: videoState }: { id: string; state: VideoState }
     ) {
       let video = state.videos.find(v => v.id === id)
-      if (video) video.state = videoState
+      if (video) {
+        video.state = videoState
+        if (videoState == "downloading") video.progress = 0
+      }
       if (videoState == "finished" && state.history.indexOf(id) === -1)
         state.history.push(id)
     },
@@ -103,18 +107,19 @@ const store = new Vuex.Store({
     },
   },
   actions: {
-    async downloadVideo({ state, commit }, id: string) {
-      let video = state.videos.find(v => v.id === id)
-      if (video) {
-        if (video.state === "premiere" || video.live)
+    async downloadVideos({ state, commit }) {
+      state.videos.forEach(v => {
+        commit({ type: "setVideoState", id: v.id, state: "downloading" })
+        if (v.state === "premiere" || v.live)
           throw new Error("Can't download premières and livestreams")
-
-        commit({ type: "setVideoState", id, state: "downloading" })
-        let data = { type: "download", id }
-        socket.send(JSON.stringify(data))
-      } else throw new Error("No video with id " + id)
+      })
+      socket.send(
+        JSON.stringify({ type: "download", ids: state.videos.map(v => v.id) })
+      )
+      state.isDownloading = true
     },
-    clearVideos({ state, commit }) {
+    clearVideos({ state, commit, dispatch }) {
+      dispatch("cancelDownload")
       for (const id of state.videos.map(v => v.id)) {
         commit("removeVideo", id)
       }
@@ -124,8 +129,8 @@ const store = new Vuex.Store({
         if (video.state === "downloading")
           commit({ type: "setVideoState", id: video.id, state: "queued" })
       }
-      let data = { type: "cancel" }
-      socket.send(JSON.stringify(data))
+      socket.send(JSON.stringify({ type: "cancel" }))
+      state.isDownloading = false
     },
   },
 })
@@ -133,9 +138,12 @@ const store = new Vuex.Store({
 socketEvents.onVideoDownloaded = (id: string) => {
   store.commit({ type: "setVideoState", id, state: "finished" })
 }
-socketEvents.onError = console.error
 socketEvents.onVideoProgress = (id: string, progress: number) => {
   store.commit({ type: "setVideoProgress", id, progress })
 }
+socketEvents.onDownloadFinished = () => {
+  store.state.isDownloading = false
+}
+socketEvents.onError = console.error
 
 export default store

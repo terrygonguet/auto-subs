@@ -8,6 +8,9 @@
     "start": "node server/index.js"
   },
   "dependencies": {
+    "@types/express": "^4.16.1",
+    "@types/node-fetch": "^2.3.3",
+    "@types/sockjs": "^0.3.31",
     "@types/sockjs-client": "^1.1.1",
     "cron": "^1.6.0",
     "node-fetch": "^2.3.0",

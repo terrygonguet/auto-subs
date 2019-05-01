@@ -32,17 +32,15 @@ export default Vue.extend({
       default: true,
     },
   },
-  data() {
-    return {
-      loading: false,
-    }
-  },
   computed: {
     videos(): VideoData[] {
       return this.$store.state.videos
     },
     show(): boolean {
       return this.$route.name != "player" || !this.$store.state.fullwidth
+    },
+    loading(): boolean {
+      return this.$store.state.isDownloading
     },
   },
   methods: {
@@ -51,31 +49,7 @@ export default Vue.extend({
       if (!this.videos.length) this.$emit("empty")
     },
     download() {
-      this.loading = true
-      const download = (index: number = 0) => {
-        if (!this.videos[index]) {
-          this.loading = false
-          return
-        }
-
-        let unwatch: () => void
-        this.$store
-          .dispatch("downloadVideo", this.videos[index].id)
-          .catch(() => {
-            unwatch()
-            download(index + 1)
-          })
-        unwatch = this.$watch(
-          () => this.videos[index].state,
-          (val, old) => {
-            if (val === "finished") {
-              unwatch()
-              this.$nextTick(() => download(index + 1))
-            }
-          }
-        )
-      }
-      download()
+      this.$store.dispatch("downloadVideos")
     },
     clearVideos() {
       this.$store.dispatch("clearVideos").then(() => {
@@ -83,9 +57,7 @@ export default Vue.extend({
       })
     },
     cancel() {
-      this.$store.dispatch("cancelDownload").then(() => {
-        this.loading = false
-      })
+      this.$store.dispatch("cancelDownload")
     },
     reorder(video: VideoData, delta: number) {
       this.$store.commit({ type: "reorderVideo", id: video.id, delta })
