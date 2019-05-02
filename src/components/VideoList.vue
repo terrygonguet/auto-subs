@@ -94,7 +94,6 @@ export default Vue.extend({
 .videolist {
   overflow-x: hidden;
   overflow-y: auto;
-  padding: 0.5em;
 }
 
 .videolist > * {
