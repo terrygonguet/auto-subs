@@ -3,6 +3,7 @@
     <div class="controls" v-if="showControls">
       <button @click="download" v-if="!loading">💾</button>
       <button @click="cancel" v-else>❌</button>
+      <span>{{ nbDownloaded }} / {{ nbVideos }} saved</span>
     </div>
     <VideoElement
       v-for="video in videos"
@@ -42,6 +43,14 @@ export default Vue.extend({
     loading(): boolean {
       return this.$store.state.isDownloading
     },
+    nbDownloaded(): number {
+      return this.$store.state.videos.filter(
+        (v: VideoData) => v.state == "finished"
+      ).length
+    },
+    nbVideos(): number {
+      return this.$store.state.videos.length
+    },
   },
   methods: {
     remove(id: string) {
@@ -73,7 +82,7 @@ export default Vue.extend({
 <style lang="postcss" scoped>
 .controls {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   position: sticky;
@@ -85,7 +94,7 @@ export default Vue.extend({
 .videolist {
   overflow-x: hidden;
   overflow-y: auto;
-  width: 25%;
+  padding: 0.5em;
 }
 
 .videolist > * {

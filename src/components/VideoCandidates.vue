@@ -196,9 +196,10 @@ export default Vue.extend({
 
 .candidates {
   display: grid;
-  grid-gap: 1em;
-  margin: 0 1em;
-  grid-template-columns: repeat(auto-fit, minmax(30%, 1fr));
+  grid-gap: 0.2em;
+  margin: 1em;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  justify-items: center;
 }
 
 .controls {
@@ -207,10 +208,6 @@ export default Vue.extend({
   top: 0;
   background: #333;
   z-index: 100;
-}
-
-.video {
-  border: 1px solid #eee;
 }
 
 .loading {
