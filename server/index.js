@@ -5,9 +5,7 @@ const CronJob = require("cron").CronJob
 const fs = require("fs")
 const http = require("http")
 
-const MAX_SIZE = process.env.MAX_SIZE || 10 * 1024 ** 3
-const MAX_NB_VIDS = process.env.MAX_NB_VIDS || 50
-
+const MAX_AGE = process.env.MAX_AGE || 630000000
 const app = express()
 const server = http.createServer(app)
 setupApi(app)
@@ -35,17 +33,8 @@ new CronJob(
         ...fs.statSync("./dist/videos/" + v),
         name: v,
       }))
-      let size = stats.reduce((acc, cur) => acc + cur.size, 0)
-      stats.sort((a, b) => (a.atimeMs < b.atimeMs ? -1 : 1))
-      while (size > MAX_SIZE || videos.length > MAX_NB_VIDS) {
-        let last = stats[0]
-        fs.unlinkSync("./dist/videos/" + last.name)
-        stats.splice(0, 1)
-        videos.splice(videos.indexOf(last.name), 1)
-        size = stats.reduce((acc, cur) => acc + cur.size, 0)
-      }
       stats.forEach(s => {
-        if (s.size < 1024 * 1024) {
+        if (Date.now() - s.birthtimeMs > MAX_AGE) {
           fs.unlinkSync("./dist/videos/" + s.name)
         }
       })
