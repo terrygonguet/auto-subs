@@ -6,6 +6,7 @@ const fs = require("fs")
 const http = require("http")
 
 const MAX_AGE = process.env.MAX_AGE || 630000000
+const PORT = process.env.PORT || 8080
 const app = express()
 const server = http.createServer(app)
 setupApi(app)
@@ -16,9 +17,7 @@ app.get("/*", (req, res) => {
   res.redirect("/")
 })
 
-server.listen(process.env.PORT, () =>
-  console.log("Server started on port " + process.env.PORT)
-)
+server.listen(PORT, () => console.log("Server started on port " + PORT))
 
 new CronJob(
   "0 */5 * * * *",
