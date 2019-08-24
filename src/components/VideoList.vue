@@ -38,7 +38,10 @@ export default Vue.extend({
       return this.$store.state.videos
     },
     show(): boolean {
-      return this.$route.name != "player" || !this.$store.state.fullwidth
+      return (
+        !(this.$route.name == "player" && this.$store.state.fullwidth) &&
+        this.nbVideos >= 1
+      )
     },
     loading(): boolean {
       return this.$store.state.isDownloading

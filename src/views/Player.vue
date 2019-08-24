@@ -14,13 +14,13 @@
     <div class="controls" v-if="!fullwidth">
       <router-link to="/">Back</router-link>
       <div>
-        <span @click="changeSpeed(-0.1)">⏪</span>
-        <span>{{ this.playbackSpeed }}x</span>
-        <span @click="changeSpeed(0.1)">⏩</span>
+        <button @click="setSpeed(1)" :class="{highlighted: playbackSpeed==1}">1x</button>
+        <button @click="setSpeed(1.5)" :class="{highlighted: playbackSpeed==1.5}">1.5x</button>
+        <button @click="setSpeed(1.7)" :class="{highlighted: playbackSpeed==1.7}">1.7x</button>
       </div>
       <label>
         Autoplay
-        <input type="checkbox" :checked="autoplay" @change="setAutoplay">
+        <input type="checkbox" :checked="autoplay" @change="setAutoplay" />
       </label>
       <label>
         Remove when watched
@@ -28,7 +28,7 @@
           type="checkbox"
           :checked="removeAfterView"
           @change="setRemoveAfterView"
-        >
+        />
       </label>
     </div>
   </div>
@@ -80,8 +80,8 @@ export default Vue.extend({
     play(id: string) {
       this.$store.commit("play", id)
     },
-    changeSpeed(delta: number) {
-      this.$store.commit("setPlaybackSpeed", this.playbackSpeed + delta)
+    setSpeed(speed: number) {
+      this.$store.commit("setPlaybackSpeed", speed)
     },
     changeVolume() {
       let player = this.$refs.player as HTMLVideoElement
@@ -157,6 +157,15 @@ export default Vue.extend({
   flex-direction: row;
   justify-content: space-evenly;
   align-items: flex-start;
+}
+
+button {
+  border: 1px solid black;
+  margin: 0.25rem;
+}
+
+.highlighted {
+  border: 1px solid red;
 }
 
 a {
